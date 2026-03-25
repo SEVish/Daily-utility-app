@@ -4,6 +4,7 @@ import { MyComponent } from './myfunction';
 import NewsComponent from './NewsComponent';
 import ClaimsComponent from './ClaimsComponent';
 import GroceryComponent from './GroceryComponent';
+import ChartsComponent from './ChartsComponent';
 
 function App() {
   const [activePage, setActivePage] = useState('home');
@@ -16,6 +17,8 @@ function App() {
         return <ClaimsComponent />;
       case 'grocery':
         return <GroceryComponent />;
+      case 'charts':
+        return <ChartsComponent />;
       default:
         return (
           <div className="home-page">
@@ -30,6 +33,9 @@ function App() {
               </button>
               <button onClick={() => setActivePage('grocery')} className="nav-btn grocery-btn">
                 🛒 Grocery List
+              </button>
+              <button onClick={() => setActivePage('charts')} className="nav-btn charts-btn">
+                📊 View Charts
               </button>
             </div>
             <MyComponent comName="ui" />
@@ -66,6 +72,12 @@ function App() {
             className={`nav-btn ${activePage === 'grocery' ? 'active' : ''}`}
           >
             🛒 Grocery
+          </button>
+          <button
+            onClick={() => setActivePage('charts')}
+            className={`nav-btn ${activePage === 'charts' ? 'active' : ''}`}
+          >
+            📊 Charts
           </button>
         </nav>
       </header>

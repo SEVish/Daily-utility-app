@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { addGroceryItem, removeGroceryItem, toggleGroceryItem, clearGroceryList } from './store';
+import { addGroceryItem, removeGroceryItem, toggleGroceryItem, fetchGroceryItems } from './store';
 import './GroceryComponent.css';
 
 export function GroceryComponent() {
   const dispatch = useDispatch();
-  const { items } = useSelector((state) => state.grocery);
+  const { items, loading, error } = useSelector((state) => state.grocery);
+
+  useEffect(() => {
+    // Fetch grocery items from database on component mount
+    dispatch(fetchGroceryItems());
+  }, [dispatch]);
 
   const [newItem, setNewItem] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('produce');
@@ -80,14 +85,10 @@ export function GroceryComponent() {
   };
 
   const handleAddItem = (itemName) => {
-    const newGroceryItem = {
-      id: Date.now() + Math.random(),
+    dispatch(addGroceryItem({
       name: itemName,
       category: selectedCategory,
-      completed: false,
-      addedAt: new Date().toISOString(),
-    };
-    dispatch(addGroceryItem(newGroceryItem));
+    }));
   };
 
   const handleAddCustomItem = (e) => {
@@ -111,7 +112,7 @@ export function GroceryComponent() {
   };
 
   const getCompletedCount = () => {
-    return items.filter(item => item.completed).length;
+    return items.filter(item => item.is_completed).length;
   };
 
   const getTotalCount = () => {
@@ -126,9 +127,6 @@ export function GroceryComponent() {
           <span className="stats-text">
             {getCompletedCount()} / {getTotalCount()} items completed
           </span>
-          <button onClick={() => dispatch(clearGroceryList())} className="clear-btn">
-            Clear All
-          </button>
         </div>
       </div>
 
@@ -194,11 +192,11 @@ export function GroceryComponent() {
                     <h3>{category.name}</h3>
                     <div className="category-items">
                       {categoryItems.map((item) => (
-                        <div key={item.id} className={`grocery-item ${item.completed ? 'completed' : ''}`}>
+                        <div key={item.id} className={`grocery-item ${item.is_completed ? 'completed' : ''}`}>
                           <label className="item-checkbox">
                             <input
                               type="checkbox"
-                              checked={item.completed}
+                              checked={item.is_completed}
                               onChange={() => handleToggleItem(item.id)}
                             />
                             <span className="checkmark"></span>

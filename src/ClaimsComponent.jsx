@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { submitClaim, clearClaims } from './store';
+import { addClaim, clearClaims, fetchClaims, deleteClaim } from './store';
 import './ClaimsComponent.css';
 
 export function ClaimsComponent() {
   const dispatch = useDispatch();
-  const { claims, loading, error } = useSelector((state) => state.claims);
+  const { data: claims = [], loading, error } = useSelector((state) => state.claims);
+
+  useEffect(() => {
+    // Fetch claims from database on component mount
+    dispatch(fetchClaims());
+  }, [dispatch]);
 
   const [claimForm, setClaimForm] = useState({
     title: '',
@@ -34,12 +39,10 @@ export function ClaimsComponent() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (claimForm.title && claimForm.description && claimForm.amount) {
-      dispatch(submitClaim({
-        ...claimForm,
-        id: Date.now(),
-        status: 'pending',
-        submittedAt: new Date().toISOString(),
+    if (claimForm.description && claimForm.amount) {
+      dispatch(addClaim({
+        description: claimForm.description,
+        amount: claimForm.amount,
       }));
       setClaimForm({
         title: '',

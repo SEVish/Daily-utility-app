@@ -1,7 +1,8 @@
 import { configureStore, createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiService } from './api';
+import { usersAPI, claimsAPI, groceryAPI, chartsAPI } from './services/dbApi';
 
-// Async thunk for fetching top headlines
+// ========== NEWSAPI THUNKS ==========
 export const fetchNews = createAsyncThunk(
   'news/fetchNews',
   async ({ country = 'us', category = 'general' }, { rejectWithValue }) => {
@@ -14,7 +15,6 @@ export const fetchNews = createAsyncThunk(
   }
 );
 
-// Async thunk for searching news
 export const searchNews = createAsyncThunk(
   'news/searchNews',
   async ({ query }, { rejectWithValue }) => {
@@ -26,6 +26,158 @@ export const searchNews = createAsyncThunk(
     }
   }
 );
+
+// ========== DATABASE THUNKS ==========
+
+// Users Thunks
+export const fetchUsers = createAsyncThunk(
+  'users/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await usersAPI.getAll();
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const addUser = createAsyncThunk(
+  'users/add',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await usersAPI.create(userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Claims Thunks
+export const fetchClaims = createAsyncThunk(
+  'claims/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await claimsAPI.getAll();
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const addClaim = createAsyncThunk(
+  'claims/add',
+  async (claimData, { rejectWithValue }) => {
+    try {
+      const response = await claimsAPI.create(claimData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateClaim = createAsyncThunk(
+  'claims/update',
+  async ({ id, ...data }, { rejectWithValue }) => {
+    try {
+      const response = await claimsAPI.update(id, data);
+      return { id, ...data };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const deleteClaim = createAsyncThunk(
+  'claims/delete',
+  async (id, { rejectWithValue }) => {
+    try {
+      await claimsAPI.delete(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Grocery Thunks
+export const fetchGroceryItems = createAsyncThunk(
+  'grocery/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await groceryAPI.getAll();
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const addGroceryItem = createAsyncThunk(
+  'grocery/add',
+  async (itemData, { rejectWithValue }) => {
+    try {
+      const response = await groceryAPI.create(itemData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const toggleGroceryItem = createAsyncThunk(
+  'grocery/toggle',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await groceryAPI.toggle(id);
+      return { id, ...response.data };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const removeGroceryItem = createAsyncThunk(
+  'grocery/remove',
+  async (id, { rejectWithValue }) => {
+    try {
+      await groceryAPI.delete(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Charts Thunks
+export const fetchCharts = createAsyncThunk(
+  'charts/fetchAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await chartsAPI.getAll();
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const saveChart = createAsyncThunk(
+  'charts/save',
+  async (chartData, { rejectWithValue }) => {
+    try {
+      const response = await chartsAPI.save(chartData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// ========== SLICES ==========
 
 const newsSlice = createSlice({
   name: 'news',
@@ -73,30 +225,78 @@ const newsSlice = createSlice({
   },
 });
 
-const claimsSlice = createSlice({
-  name: 'claims',
+const usersSlice = createSlice({
+  name: 'users',
   initialState: {
-    claims: [],
+    data: [],
     loading: false,
     error: null,
   },
   reducers: {
-    submitClaim: (state, action) => {
-      state.claims.push(action.payload);
+    clearUsers: (state) => {
+      state.data = [];
+      state.error = null;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(addUser.fulfilled, (state, action) => {
+        state.data.push(action.payload);
+      });
+  },
+});
+
+const claimsSlice = createSlice({
+  name: 'claims',
+  initialState: {
+    data: [],
+    loading: false,
+    error: null,
+  },
+  reducers: {
     clearClaims: (state) => {
-      state.claims = [];
+      state.data = [];
+      state.error = null;
     },
-    updateClaimStatus: (state, action) => {
-      const { id, status } = action.payload;
-      const claim = state.claims.find(c => c.id === id);
-      if (claim) {
-        claim.status = status;
-      }
-    },
-    deleteClaim: (state, action) => {
-      state.claims = state.claims.filter(c => c.id !== action.payload);
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchClaims.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchClaims.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+      })
+      .addCase(fetchClaims.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(addClaim.fulfilled, (state, action) => {
+        state.data.push(action.payload);
+      })
+      .addCase(updateClaim.fulfilled, (state, action) => {
+        const claim = state.data.find(c => c.id === action.payload.id);
+        if (claim) {
+          Object.assign(claim, action.payload);
+        }
+      })
+      .addCase(deleteClaim.fulfilled, (state, action) => {
+        state.data = state.data.filter(c => c.id !== action.payload);
+      });
   },
 });
 
@@ -104,42 +304,42 @@ const grocerySlice = createSlice({
   name: 'grocery',
   initialState: {
     items: [],
+    loading: false,
+    error: null,
   },
   reducers: {
-    addGroceryItem: (state, action) => {
-      // Check if item already exists
-      const existingItem = state.items.find(item => item.name.toLowerCase() === action.payload.name.toLowerCase());
-      if (!existingItem) {
-        state.items.push(action.payload);
-      }
-    },
-    removeGroceryItem: (state, action) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
-    },
-    toggleGroceryItem: (state, action) => {
-      const item = state.items.find(item => item.id === action.payload);
-      if (item) {
-        item.completed = !item.completed;
-      }
-    },
     clearGroceryList: (state) => {
       state.items = [];
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchGroceryItems.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchGroceryItems.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchGroceryItems.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(addGroceryItem.fulfilled, (state, action) => {
+        state.items.push(action.payload);
+      })
+      .addCase(toggleGroceryItem.fulfilled, (state, action) => {
+        const item = state.items.find(i => i.id === action.payload.id);
+        if (item) {
+          item.is_completed = action.payload.is_completed;
+        }
+      })
+      .addCase(removeGroceryItem.fulfilled, (state, action) => {
+        state.items = state.items.filter(item => item.id !== action.payload);
+      });
+  },
 });
-
-// Async thunk for fetching posts
-export const fetchPosts = createAsyncThunk(
-  'posts/fetchPosts',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await apiService.getPosts();
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
 
 const postsSlice = createSlice({
   name: 'posts',
@@ -153,21 +353,6 @@ const postsSlice = createSlice({
       state.data = [];
       state.error = null;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchPosts.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchPosts.fulfilled, (state, action) => {
-        state.loading = false;
-        state.data = action.payload;
-      })
-      .addCase(fetchPosts.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
   },
 });
 
@@ -190,7 +375,7 @@ const counterSlice = createSlice({
 });
 
 const userSlice = createSlice({
-  name: 'user',
+  name: 'currentUser',
   initialState: {
     name: '',
     email: '',
@@ -202,7 +387,7 @@ const userSlice = createSlice({
       state.email = action.payload.email;
       state.isLoggedIn = true;
     },
-    clearUser: (state) => {
+    logout: (state) => {
       state.name = '';
       state.email = '';
       state.isLoggedIn = false;
@@ -210,20 +395,26 @@ const userSlice = createSlice({
   },
 });
 
-export const { increment, decrement, incrementByAmount } = counterSlice.actions;
-export const { setUser, clearUser } = userSlice.actions;
-export const { clearPosts } = postsSlice.actions;
-export const { clearNews } = newsSlice.actions;
-export const { submitClaim, clearClaims, updateClaimStatus, deleteClaim } = claimsSlice.actions;
-export const { addGroceryItem, removeGroceryItem, toggleGroceryItem, clearGroceryList } = grocerySlice.actions;
-
-export const store = configureStore({
+// ========== STORE ==========
+const store = configureStore({
   reducer: {
-    counter: counterSlice.reducer,
-    user: userSlice.reducer,
-    posts: postsSlice.reducer,
     news: newsSlice.reducer,
+    users: usersSlice.reducer,
     claims: claimsSlice.reducer,
     grocery: grocerySlice.reducer,
+    posts: postsSlice.reducer,
+    counter: counterSlice.reducer,
+    currentUser: userSlice.reducer,
   },
 });
+
+// Export actions
+export const { clearNews } = newsSlice.actions;
+export const { clearUsers } = usersSlice.actions;
+export const { clearClaims } = claimsSlice.actions;
+export const { clearGroceryList } = grocerySlice.actions;
+export const { clearPosts } = postsSlice.actions;
+export const { increment, decrement, incrementByAmount } = counterSlice.actions;
+export const { setUser, logout } = userSlice.actions;
+
+export default store;
