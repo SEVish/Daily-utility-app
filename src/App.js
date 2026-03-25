@@ -1,23 +1,78 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import { MyComponent } from './myfunction';
+import NewsComponent from './NewsComponent';
+import ClaimsComponent from './ClaimsComponent';
+import GroceryComponent from './GroceryComponent';
 
 function App() {
+  const [activePage, setActivePage] = useState('home');
+
+  const renderActivePage = () => {
+    switch (activePage) {
+      case 'news':
+        return <NewsComponent />;
+      case 'claims':
+        return <ClaimsComponent />;
+      case 'grocery':
+        return <GroceryComponent />;
+      default:
+        return (
+          <div className="home-page">
+            <h2>Welcome to Daily Utility App</h2>
+            <p>Choose a section to explore:</p>
+            <div className="home-buttons">
+              <button onClick={() => setActivePage('news')} className="nav-btn news-btn">
+                📰 View News
+              </button>
+              <button onClick={() => setActivePage('claims')} className="nav-btn claims-btn">
+                📋 Manage Claims
+              </button>
+              <button onClick={() => setActivePage('grocery')} className="nav-btn grocery-btn">
+                🛒 Grocery List
+              </button>
+            </div>
+            <MyComponent comName="ui" />
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+      <header className="app-header">
+        <h1>Daily Utility App</h1>
+        <nav className="app-nav">
+          <button
+            onClick={() => setActivePage('home')}
+            className={`nav-btn ${activePage === 'home' ? 'active' : ''}`}
+          >
+            🏠 Home
+          </button>
+          <button
+            onClick={() => setActivePage('news')}
+            className={`nav-btn ${activePage === 'news' ? 'active' : ''}`}
+          >
+            📰 News
+          </button>
+          <button
+            onClick={() => setActivePage('claims')}
+            className={`nav-btn ${activePage === 'claims' ? 'active' : ''}`}
+          >
+            📋 Claims
+          </button>
+          <button
+            onClick={() => setActivePage('grocery')}
+            className={`nav-btn ${activePage === 'grocery' ? 'active' : ''}`}
+          >
+            🛒 Grocery
+          </button>
+        </nav>
       </header>
+
+      <main className="app-main">
+        {renderActivePage()}
+      </main>
     </div>
   );
 }
